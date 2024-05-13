@@ -1,21 +1,5 @@
 import { Link } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
-export const Popeye = () => {
-  return (
-    <>
-      <p>Hi, I am Popeye! I love to eat Spinach!</p>
-      <Link to="/">Click here to go back</Link>
-    </>
-  );
-};
-export const Spinach = () => {
-  return (
-    <>
-      <p>Hi, I am Spinach! Popeye loves to eat me!</p>
-      <Link to="/">Click here to go back</Link>
-    </>
-  );
-};
 const App = () => {
   return (
     <div>
@@ -31,6 +15,14 @@ const App = () => {
     </div>
   );
 };
+export const About = () => {
+  return (
+    <>
+      <p>I am about page</p>
+    </>
+  );
+};
+
 export const DefaultProfile = () => {
   return <p>Oh, nothing to see here!</p>;
 };
