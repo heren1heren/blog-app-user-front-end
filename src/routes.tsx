@@ -1,4 +1,4 @@
-import App, { Profile, About, ErrorPage, HomePage } from './router-template';
+import App, { About, ErrorPage, Login, SignUp } from './router-template';
 
 const routes = [
   {
@@ -6,17 +6,14 @@ const routes = [
     element: <App />,
     errorElement: <ErrorPage />,
   },
+
   {
-    path: 'profile/:name',
-    element: <Profile />,
+    path: '/signUp',
+    element: <SignUp />,
   },
   {
-    path: 'profile/',
-    element: <Profile />,
-  },
-  {
-    path: 'homePage', // new element
-    element: <HomePage />,
+    path: '/login',
+    element: <Login />,
   },
   {
     path: '/about',
