@@ -1,13 +1,13 @@
 Todo:
 
-- implement blog-component
-- implement log in component
-- implement sign up component
-- fill up the about page with dummy content
-  -> then connect to backend api
+- organizing the code then ->
+- deal with authentication
 
-Plan:
-structure simple apps in order to connect with backend api
+- how to authorize user through jwt token
+- how to authorize user through github or google
+
+Problems:
+-refactor virtual model data inside front end app
 
 goals:
 

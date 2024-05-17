@@ -1,4 +1,10 @@
-import App, { About, ErrorPage, Login, SignUp } from './router-template';
+import App, {
+  About,
+  ErrorPage,
+  LoginForm,
+  SignUpForm,
+  BlogDetail,
+} from './router-template';
 
 const routes = [
   {
@@ -9,15 +15,20 @@ const routes = [
 
   {
     path: '/signUp',
-    element: <SignUp />,
+    element: <SignUpForm />,
   },
   {
     path: '/login',
-    element: <Login />,
+    element: <LoginForm />,
   },
   {
     path: '/about',
     element: <About />,
+  },
+  {
+    // dynamic routes?
+    path: '/blogs/:id',
+    element: <BlogDetail />,
   },
 ];
 export default routes;

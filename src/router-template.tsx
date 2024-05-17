@@ -1,90 +1,57 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Layout from './layout';
+import axios from 'axios';
 import './index.scss';
-
-const Blog = () =>
-  // { title, description, likeCount }
-  {
-    return (
-      <div className=" grid-item d-flex flex-column">
-        <h3> blog title </h3>
-        <p>
-          {' '}
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. A, atque eum!
-          Dicta laboriosam quam nulla quos ad perspiciatis consequuntur dolor.
-          Tenetur autem nam id quisquam deleniti nesciunt quam accusantium eum?
-        </p>
-        <div> like: 2</div>
-
-        <h3>comments:</h3>
-        <a href="/"> Go to blog</a>
-        <div className=" align-self-end mt-auto"> Date: 22/2/2022</div>
-      </div>
-    );
-  };
-const BlogsContainer = () => {
-  return (
-    <div className=" d-flex flex-column justify-content-center align-items-center gap-3">
-      <Blog />
-      <Blog />
-      <Blog />
-      <Blog />
-      <Blog />
-    </div>
-  );
-};
-const BlogForm = () => {
-  const [isAuth, setIsAuth] = useState(true);
-  return (
-    <>
-      {isAuth ? (
-        <form action="/" method="POST">
-          Post Blog:
-          <div className="input-group mb-3">
-            <span className="input-group-text">Title</span>
-            <input
-              type="text"
-              name="name"
-              id="name"
-              className="form-control"
-              placeholder="placeholder"
-            />
-          </div>
-          <div className="mb-3">
-            <label htmlFor="" className="form-label">
-              Description:
-            </label>
-            <textarea
-              className="form-control"
-              name="comment"
-              id=""
-              rows={3}
-              placeholder="comment here."
-            ></textarea>
-          </div>
-          <button type="submit" className="btn btn-primary">
-            {' '}
-            Post
-          </button>
-        </form>
-      ) : (
-        <p> log in to post blogs</p>
-      )}
-    </>
-  );
-};
-const LoginForm = () => {};
-const SignUpForm = () => {};
+import { useParams } from 'react-router-dom';
+import { Blog, BlogsContainer, BlogForm } from './blog';
+import { log } from 'console';
 
 const App = () => {
   const [blogs, setBlogs] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errors, setErrors] = useState([]);
+  const isFetched = useRef();
 
-  // fetch data by use effect
+  useEffect(() => {
+    if (isFetched.current) return;
+    (async () => {
+      try {
+        const response = await axios.get('http://localhost:3000/blogs');
+        if (response) setBlogs(response.data.blogs);
+      } catch (error) {
+        console.log(error);
+        setErrors(errors);
+      } finally {
+        setIsLoading(false);
+        isFetched.current = true;
+      }
+    })();
+  }, [isLoading]);
 
   return (
     <Layout title={'Blog App'}>
-      <BlogsContainer />
-      <BlogForm />
+      <BlogsContainer>
+        {!isLoading ? (
+          blogs.map((blog) => {
+            return (
+              <Blog
+                key={blog._id}
+                description={blog.description}
+                title={blog.title}
+                date={blog.date}
+                likesCount={blog.likes.length}
+                url={'/blogs/' + blog._id}
+                comments={blog.comments}
+              >
+                {' '}
+              </Blog>
+            );
+          })
+        ) : (
+          <p>loading...</p>
+        )}
+      </BlogsContainer>
+      <BlogForm setIsLoading={setIsLoading} isFetched={isFetched} />
     </Layout>
   );
 };
@@ -138,7 +105,7 @@ export const ErrorPage = () => {
   );
 };
 
-export function Login() {
+export function LoginForm() {
   /**
    * creating a login form here
    * log in by jwt token
@@ -192,7 +159,7 @@ export function Login() {
     </Layout>
   );
 }
-export function SignUp() {
+export function SignUpForm() {
   /**
    * creating a sign up form here
    * sign up by jwt token (storing data to database)
@@ -246,5 +213,90 @@ export function SignUp() {
     </Layout>
   );
 }
+export const BlogDetail = () => {
+  const { id } = useParams();
+  const [blog, setBlog] = useState();
+  const [errors, setErrors] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [inputValues, setInputValues] = useState({ description: '' });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const comment = {
+      description: inputValues.description,
+    };
+    axios
+      .post(`http://localhost:3000/blogs/${id}`, comment)
+      .then(() => {
+        setIsLoading(true);
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+    // re render the page when post
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setInputValues({ ...inputValues, [name]: value });
+  };
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const response = await axios.get(`http://localhost:3000/blogs/${id}`);
+        const blog = response.data;
+
+        setBlog(blog);
+      } catch (error) {
+        console.log(error);
+        setErrors(errors);
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }, [isLoading]);
+
+  return (
+    <>
+      {' '}
+      {!isLoading ? (
+        <Layout title={blog.title}>
+          <h2> Author: {blog.author}</h2>
+          <h4> {blog.description}</h4>
+          <hr />
+          <p>Comment:</p>
+          {blog.comments.map((comment) => {
+            console.log(comment);
+            return <li key={comment._id}> {comment.description}</li>;
+          })}
+          <hr />
+
+          <form onSubmit={handleSubmit} method="POST">
+            <p>Post your comment:</p>
+            <div className="mb-3">
+              <label htmlFor="" className="form-label">
+                Description:
+              </label>
+              <textarea
+                className="form-control"
+                name="description"
+                id=""
+                rows="3"
+                onChange={handleInputChange}
+                minLength={8}
+              ></textarea>
+            </div>
+            <button type="submit" className="btn btn-primary">
+              Post
+            </button>
+          </form>
+        </Layout>
+      ) : (
+        <p>loading...</p>
+      )}
+    </>
+  );
+};
 
 export default App;
