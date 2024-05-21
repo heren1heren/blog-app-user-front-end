@@ -1,6 +1,5 @@
 import axios from 'axios';
 import React, { FC, useState } from 'react';
-import { useParams } from 'react-router-dom';
 
 // blog component here
 type CommentProps = {
@@ -54,20 +53,19 @@ export const BlogForm = ({
   setIsLoading: React.SetStateAction<boolean>;
   isFetched: React.Ref<boolean>;
 }) => {
-  //* mock auth, later need to link it with authorization
-  const [isAuth, setIsAuth] = useState(true);
+  const token = localStorage.getItem('jwtToken');
 
   const [inputValues, setInputData] = useState({
     title: '',
     description: '',
     type: '',
   });
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setInputData({ ...inputValues, [name]: value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.ChangeEvent<HTMLButtonElement>) => {
     e.preventDefault();
 
     // get inputs data from the form then put it inside axios call
@@ -94,7 +92,7 @@ export const BlogForm = ({
   };
   return (
     <>
-      {isAuth ? (
+      {token ? (
         <form onSubmit={handleSubmit} method="POST">
           Post Blog:
           <div className="input-group mb-3">

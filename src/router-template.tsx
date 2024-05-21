@@ -4,9 +4,24 @@ import axios from 'axios';
 import './index.scss';
 import { useParams } from 'react-router-dom';
 import { Blog, BlogsContainer, BlogForm } from './blog';
-import { log } from 'console';
-
+import { useNavigate } from 'react-router-dom';
+type commentType = {
+  _id: string;
+  description: string;
+};
+type blogType = {
+  _id: string;
+  title: string;
+  date: Date;
+  likes: object[];
+  url: string;
+  description: string;
+  comments: object[];
+  author: string;
+};
 const App = () => {
+  //todo: token authentication to display post blog or not
+
   const [blogs, setBlogs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errors, setErrors] = useState([]);
@@ -32,7 +47,7 @@ const App = () => {
     <Layout title={'Blog App'}>
       <BlogsContainer>
         {!isLoading ? (
-          blogs.map((blog) => {
+          blogs.map((blog: blogType) => {
             return (
               <Blog
                 key={blog._id}
@@ -59,7 +74,8 @@ export const About = () => {
   return (
     <Layout title={'About Me'}>
       {' '}
-      I am a cookie turtle,
+      I am a cookie turtle, this is a blog app that you can post and comment
+      after log in
       <form action="/" method="POST">
         <p>contact me through email:</p>
         <div className="mb-3">
@@ -111,11 +127,48 @@ export function LoginForm() {
    * log in by jwt token
    * log in by github
    */
+
+  const navigate = useNavigate();
+  const [message, setMessage] = useState();
+  const [errors, setErrors] = useState();
+  const [inputValues, setInputValues] = useState({
+    username: '',
+    password: '',
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    axios
+      .post(`http://localhost:3000/login`, {
+        username: inputValues.username,
+        password: inputValues.password,
+      })
+      .then((res) => {
+        if (res.data.message === 'successful') {
+          navigate('/');
+        }
+        // console.log(res.data.token);
+        const token = res.data.token;
+        localStorage.setItem('jwtToken', 'Bearer ' + token);
+        axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
+      })
+      .catch((err) => {
+        console.log(err.response);
+        if (err.response.data.message) setMessage(err.response.data.message);
+        if (err.response.data.errors) setErrors(err.response.data.errors);
+      });
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setInputValues({ ...inputValues, [name]: value });
+  };
+
   return (
     <Layout title="Log In">
       <div className="login-form d-flex flex-column gap-2 justify-content-center  align-items-center ">
         <form
-          action="/login"
+          onSubmit={handleSubmit}
           className=" w-50 d-flex flex-column border p-lg-3"
         >
           <div className="mb-3">
@@ -123,10 +176,13 @@ export function LoginForm() {
               Username:
             </label>
             <input
+              required
+              minLength={3}
+              onChange={handleInputChange}
               type="text"
               className="form-control"
-              name=""
-              id=""
+              name="username"
+              id="username"
               placeholder=""
             />
           </div>
@@ -135,26 +191,29 @@ export function LoginForm() {
               Password:
             </label>
             <input
+              required
+              minLength={8}
+              onChange={handleInputChange}
               type="password"
               className="form-control"
-              name=""
-              id=""
+              name="password"
+              id="password"
               placeholder=""
             />
           </div>
-          <button type="button" className="btn btn-primary  align-self-start">
+          <button type="submit" className="btn btn-primary  align-self-start">
             Log In
           </button>
-        </form>
+        </form>{' '}
+        {message ? <div>{message}</div> : <></>}
+        {errors ? (
+          errors.forEach((error) => {
+            <li> {error}</li>;
+          })
+        ) : (
+          <></>
+        )}
         <hr />
-        <div className="login-links d-flex flex-column gap-3 border w-50">
-          <a name="" id="" className="btn btn-primary" href="#" role="button">
-            GitHub
-          </a>
-          <a name="" id="" className="btn btn-primary" href="#" role="button">
-            Google
-          </a>
-        </div>
       </div>
     </Layout>
   );
@@ -165,11 +224,45 @@ export function SignUpForm() {
    * sign up by jwt token (storing data to database)
    * sign up by github (no idea yet)
    */
+  const navigate = useNavigate();
+  const [message, setMessage] = useState();
+  const [errors, setErrors] = useState();
+  const [inputValues, setInputValues] = useState({
+    username: '',
+    password: '',
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    axios
+      .post(`http://localhost:3000/signUp`, {
+        username: inputValues.username,
+        password: inputValues.password,
+      })
+      .then((res) => {
+        if (res.data.message === 'successful') {
+          navigate('/login');
+        }
+
+        if (res.data.message) setMessage(res.data.message);
+        if (res.data.errors) setErrors(res.data.errors);
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setInputValues({ ...inputValues, [name]: value });
+  };
+
   return (
     <Layout title={'Sign up'}>
       <div className="login-form d-flex flex-column gap-2 justify-content-center  align-items-center ">
         <form
-          action="/signUp"
+          onSubmit={handleSubmit}
+          method="POST"
           className=" w-50 d-flex flex-column border p-lg-3"
         >
           <div className="mb-3">
@@ -177,9 +270,12 @@ export function SignUpForm() {
               Username:
             </label>
             <input
+              onChange={handleInputChange}
               type="text"
               className="form-control"
-              name=""
+              required
+              minLength={3}
+              name="username"
               id=""
               placeholder=""
             />
@@ -189,33 +285,42 @@ export function SignUpForm() {
               Password:
             </label>
             <input
+              required
+              minLength={8}
+              onChange={handleInputChange}
               type="password"
               className="form-control"
-              name=""
+              name="password"
               id=""
               placeholder=""
             />
           </div>
-          <button type="button" className="btn btn-primary  align-self-start">
+
+          <button type="submit" className="btn btn-primary  align-self-start">
             Sign up
           </button>
         </form>
+        {message ? <div>{message}</div> : <></>}
+        {errors ? (
+          errors.forEach((error) => {
+            <li> {error}</li>;
+          })
+        ) : (
+          <></>
+        )}
         <hr />
-        <div className="login-links d-flex flex-column gap-3 border w-50">
-          <a name="" id="" className="btn btn-primary" href="#" role="button">
-            GitHub
-          </a>
-          <a name="" id="" className="btn btn-primary" href="#" role="button">
-            Google
-          </a>
-        </div>
       </div>
     </Layout>
   );
 }
+
 export const BlogDetail = () => {
+  //todo: token authentication to display post comment or not
+  // if token -> post comment form
+  // else -> <p>  log in to post comment</p>
+  const token = localStorage.getItem('jwtToken');
   const { id } = useParams();
-  const [blog, setBlog] = useState();
+  const [blog, setBlog] = useState<blogType>();
   const [errors, setErrors] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [inputValues, setInputValues] = useState({ description: '' });
@@ -226,7 +331,9 @@ export const BlogDetail = () => {
       description: inputValues.description,
     };
     axios
-      .post(`http://localhost:3000/blogs/${id}`, comment)
+      .post(`http://localhost:3000/blogs/${id}`, comment, {
+        headers: { Authorization: token },
+      })
       .then(() => {
         setIsLoading(true);
       })
@@ -260,37 +367,41 @@ export const BlogDetail = () => {
   return (
     <>
       {' '}
-      {!isLoading ? (
+      {!isLoading && blog ? (
         <Layout title={blog.title}>
           <h2> Author: {blog.author}</h2>
           <h4> {blog.description}</h4>
           <hr />
           <p>Comment:</p>
-          {blog.comments.map((comment) => {
-            console.log(comment);
+          {blog.comments.map((comment: commentType) => {
+            // console.log(comment);
             return <li key={comment._id}> {comment.description}</li>;
           })}
           <hr />
 
-          <form onSubmit={handleSubmit} method="POST">
-            <p>Post your comment:</p>
-            <div className="mb-3">
-              <label htmlFor="" className="form-label">
-                Description:
-              </label>
-              <textarea
-                className="form-control"
-                name="description"
-                id=""
-                rows="3"
-                onChange={handleInputChange}
-                minLength={8}
-              ></textarea>
-            </div>
-            <button type="submit" className="btn btn-primary">
-              Post
-            </button>
-          </form>
+          {token ? (
+            <form onSubmit={handleSubmit} method="POST">
+              <p>Post your comment:</p>
+              <div className="mb-3">
+                <label htmlFor="" className="form-label">
+                  Description:
+                </label>
+                <textarea
+                  className="form-control"
+                  name="description"
+                  id=""
+                  rows={3}
+                  onChange={handleInputChange}
+                  minLength={8}
+                ></textarea>
+              </div>
+              <button type="submit" className="btn btn-primary">
+                Post
+              </button>
+            </form>
+          ) : (
+            <p> login to post comment</p>
+          )}
         </Layout>
       ) : (
         <p>loading...</p>

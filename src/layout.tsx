@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 // import { useParams } from 'react-router-dom';
 const Footer = () => {
   return (
@@ -8,7 +8,12 @@ const Footer = () => {
     </div>
   );
 };
-const NavBar = ({ title }) => {
+const NavBar = ({ title }: { title: string }) => {
+  const token = localStorage.getItem('jwtToken');
+  // console.log(`inside navBar: ${token}`);
+  const handleLogOut = () => {
+    localStorage.clear();
+  };
   return (
     <ul className="nav justify-content-end ">
       <h2 className="  ms-1 mt-lg-1  me-auto  ">{title}</h2>
@@ -17,26 +22,37 @@ const NavBar = ({ title }) => {
           Blogs
         </Link>
       </li>
-      <li className="nav-item">
-        <Link className="nav-link" to="/about">
-          About Me
-        </Link>
-      </li>
+      {token ? (
+        <li className="nav-item">
+          <Link className="nav-link" to="/login" onClick={handleLogOut}>
+            Log Out
+          </Link>
+        </li>
+      ) : (
+        <>
+          <li className="nav-item">
+            <Link className="nav-link" to="/signUp">
+              Sign Up
+            </Link>
+          </li>
 
-      <li className="nav-item">
-        <Link className="nav-link" to="/signUp">
-          Sign Up
-        </Link>
-      </li>
-      <li className="nav-item">
-        <Link className="nav-link " to="/login">
-          Log In{' '}
-        </Link>
-      </li>
+          <li className="nav-item">
+            <Link className="nav-link " to="/login">
+              Log In{' '}
+            </Link>
+          </li>
+        </>
+      )}
     </ul>
   );
 };
-const Layout = ({ children, title }) => {
+const Layout = ({
+  children,
+  title,
+}: {
+  children: React.ReactNode;
+  title: string;
+}) => {
   useEffect(() => {
     document.title = `${title}`;
   }, [title]);
